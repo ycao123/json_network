@@ -1,16 +1,15 @@
-from random import randint
+from random import randrange
 from math import sqrt
 
 SMALLEST = 10**300
 
 LARGEST = int("9"*300)
 
-
 class PrimeInt(int):
     pass
 
 def Prime():
-    randnum = randint(SMALLEST, LARGEST)
+    randnum = randrange(SMALLEST, LARGEST)
 
     isPrime = False
 
