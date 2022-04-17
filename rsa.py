@@ -10,7 +10,6 @@ class PrimeInt(int):
 
 def Prime():
     randnum = randrange(SMALLEST, LARGEST)
-
     isPrime = False
 
     for i in range(2, int(sqrt(randnum)) + 1):
