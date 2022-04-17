@@ -11,17 +11,19 @@ bool rabinMiller(BIGINT n)
 {
     if (pow(2, n) - 2 == 0 % n)
     {
+        printf("Prime detected\n\n");
         return true;
     }
     else
     {
+        printf("Not prime\n\n");
         return false;
     }
 }
 
-bool isPrime(n)
+bool isPrime(BIGINT n, int k)
 {
-    int lowPrimes[] = {3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97
+    int lowPrimes[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97
                    ,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179
                    ,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269
                    ,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367
@@ -31,16 +33,17 @@ bool isPrime(n)
                    ,673,677,683,691,701,709,719,727,733,739,743,751,757,761,769,773
                    ,787,797,809,811,821,823,827,829,839,853,857,859,863,877,881,883
                    ,887,907,911,919,929,937,941,947,953,967,971,977,983,991,997};
-    for (int i = 0; i < 127; i++)
+    for (int i = 0; i < 167; i++)
     {
         int p = lowPrimes[i];
         if (n % p == 0)
         {
+            printf("Not prime\n\n");
             return false;
         }
-        return rabinMiller(n);
     }
-    return false;
+    printf("Passed initial check\n");
+    return rabinMiller(n);
 }
 
 BIGINT randrange(BIGINT upper, BIGINT lower)
@@ -58,10 +61,9 @@ BIGINT generateLargePrime(int k)
     {
         BIGINT lower = pow(2, k - 1) + 1;
         BIGINT upper = pow(2, k) - 1;
-        printf("Lower: %llu, Upper: %llu\n", lower, upper);
         n = randrange(upper, lower);
         printf("Generated %llu\n", n);
-        if (isPrime(n) == true)
+        if (isPrime(n, k) == true)
         {
             break;
         }
