@@ -2,13 +2,14 @@
 Creates client and server
 '''
 
-from cgi import test
 import socket
 import pickle
+import sys
+from time import sleep as wait
 
-SERVER_PORT = 63527
-CLIENT_PORT = 35452
-RECV_SIZE = 2**200
+SERVER_PORT = 63524
+CLIENT_PORT = 35453
+RECV_SIZE = 4096
 
 class BaseSocket:
     "The base for the client and server sockets"
@@ -32,17 +33,33 @@ class BaseSocket:
 
     def send(self, data):
         "Sends data"
+        data = self.encode(data)
         self.socket.send(self.encode(data))
+        print(f"Sent {data}")
 
     def recv(self):
         "Receives data"
-        data = self.decode(self.socket.recv(RECV_SIZE))
+        while True:
+            try:
+                data = self.socket.recv(RECV_SIZE)
+                print("Received data")
+                if not data:
+                    break
+                else:
+                    data = self.decode(data)
+            except socket.timeout:
+                wait(0.1)
+
+        if data == "SIGCLOSE":
+            print("Received SIGCLOSE signal")
+            self.socket.close()
 
         print(f"Received {data}")
         return data
 
     def close(self):
         "Closes the socket"
+        self.send("SIGCLOSE")
         self.socket.close()
         print("Closed socket")
 
@@ -59,8 +76,9 @@ class ClientSocket(BaseSocket):
         try:
             self.socket.connect(self.server)
         except ConnectionRefusedError:
-            print("Connection Refused. Trying again")
-            self.connect(self.server)
+            print("Connection Refused. Server might not be open. Try checking your IPv4")
+            self.socket.close()
+            sys.exit()
 
 class ServerSocket(BaseSocket):
     "The server socket"

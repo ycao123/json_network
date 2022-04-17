@@ -1,9 +1,15 @@
 from base_socket import ServerSocket as SSocket
 
+
 test_socket = SSocket()
-test_socket.listen()
-test_socket.send("Hello!")
+try:
+    test_socket.listen()
 
-print(test_socket.recv())
+    print(test_socket.recv())
 
-test_socket.close()
+    test_socket.send("Hello!")
+
+except BaseException as error:
+    print(error)
+    test_socket.close()
+    exit()
