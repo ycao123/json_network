@@ -1,11 +1,13 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "sodium.h"
 
 #define BIGINT unsigned long long
 #define bool int
-#define true 0
-#define false 1
+#define true 1
+#define false 0
+
 
 bool rabinMiller(BIGINT n)
 {
@@ -16,12 +18,12 @@ bool rabinMiller(BIGINT n)
     }
     else
     {
-        printf("Not prime\n\n");
+        printf("Stage 2 Not prime\n\n");
         return false;
     }
 }
 
-bool isPrime(BIGINT n, int k)
+bool isPrime(BIGINT n)
 {
     int lowPrimes[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97
                    ,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179
@@ -36,9 +38,13 @@ bool isPrime(BIGINT n, int k)
     for (int i = 0; i < 167; i++)
     {
         int p = lowPrimes[i];
+        if (n == p)
+        {
+            printf("Prime detected!\n");
+            return true;
+        }
         if (n % p == 0)
         {
-            printf("Not prime\n\n");
             return false;
         }
     }
@@ -55,15 +61,14 @@ BIGINT randrange(BIGINT upper, BIGINT lower)
 
 BIGINT generateLargePrime(int k)
 {
-    printf("Entered 1st stage\n");
     BIGINT n;
     for (;;)
     {
         BIGINT lower = pow(2, k - 1) + 1;
         BIGINT upper = pow(2, k) - 1;
         n = randrange(upper, lower);
-        printf("Generated %llu\n", n);
-        if (isPrime(n, k) == true)
+        bool is_it_prime = isPrime(n);
+        if (is_it_prime == true)
         {
             break;
         }
@@ -77,6 +82,6 @@ BIGINT generateLargePrime(int k)
 
 int main(void)
 {
-    BIGINT num = generateLargePrime(5);
+    BIGINT num = generateLargePrime(8);
     printf("%llu", num);
 }
