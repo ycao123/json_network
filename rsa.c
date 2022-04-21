@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <inttypes.h>
 
-#define BIGINT __uint128_t
+#define BIGINT __uint64_t
 #define bool int
 #define true 0
 #define false 1
 #define ACCURACY 10
+#define _PBIGINT PRIu64
 
 int lowPrimes[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97
                    ,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179
@@ -22,70 +24,76 @@ int lowPrimes[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79
 
 BIGINT randrange(BIGINT upper, BIGINT lower);
 
-/* 
- * calculates (a ** b) % c. A pretty fast algorithm
- */
-BIGINT modpow(BIGINT x, unsigned int y, BIGINT p)
+BIGINT mulmod(BIGINT a, BIGINT b, BIGINT mod)
 {
-    int res = 1;
-    x = x % p;
-    if (x == 0) return 0;
- 
-    while (y > 0)
+    BIGINT x = 0,y = a % mod;
+    while (b > 0)
     {
-        // If y is odd, multiply x with result
-        if (y & 1)
-            res = (res*x) % p;
- 
-        // y must be even now
-        y = y>>1;
-        x = (x*x) % p;
+        if (b % 2 == 1)
+        {    
+            x = (x + y) % mod;
+        }
+        y = (y * 2) % mod;
+        b /= 2;
     }
-    return res;
+    return x % mod;
 }
-
-bool rabinMiller(BIGINT n)
+/* 
+ * modular exponentiation
+ */
+BIGINT modulo(BIGINT base, BIGINT exponent, BIGINT mod)
 {
-    BIGINT d = 0;
-    BIGINT r = n - 1;
-    while ((r&1) == 0)
+    BIGINT x = 1;
+    BIGINT y = base;
+    while (exponent > 0)
     {
-        d++;
-        r>>1;
+        if (exponent % 2 == 1)
+            x = (x * y) % mod;
+        y = (y * y) % mod;
+        exponent = exponent / 2;
     }
+    return x % mod;
+}
  
-    // Iterate given number of 'k' times
-    for (int i = 0; i < ACCURACY; i++)
+/*
+ * Miller-Rabin Primality test, iteration signifies the accuracy
+ */
+int Miller(BIGINT p,int iteration)
+{
+ 
+    int i;
+    BIGINT s;
+    if (p < 2)
     {
-        BIGINT a = randrange(2, n - 2);
-        BIGINT x = modpow(a, d, n);
-        if (x == 1 || x == n - 1)
-        {
-            continue;
-        }
+        return false;
+    }
+    if (p != 2 && p % 2 == 0)
+    {
+        return false;
+    }
+    s = p - 1;
+    while (s % 2 == 0)
+    {
+        s /= 2;
+    }
 
-        bool test_passed = false;
-
-        for (int i = 0; i < (r - 1); i++)
+    for (i = 0; i < iteration; i++)
+    {
+        BIGINT a = arc4random() % (p - 1) + 1, temp = s;
+        BIGINT mod = modulo(a, temp, p);
+        while (temp != p - 1 && mod != 1 && mod != p - 1)
         {
-            x = modpow(x, 2, n);
-            if (x == 1)
-            {
-                return false;
-            }
-            if (x == n - 1)
-            {
-                test_passed = true;
-                break;
-            }
+            mod = mulmod(mod, mod, p);
+            temp *= 2;
         }
-        if (!test_passed)
+        if (mod != p - 1 && temp % 2 == 0)
         {
             return false;
         }
     }
     return true;
 }
+
 
 bool isPrime(BIGINT n)
 {
@@ -94,6 +102,7 @@ bool isPrime(BIGINT n)
         int p = lowPrimes[i];
         if (n == p)
         {
+            printf("Found a low prime");
             return true;
         }
         if (n % p == 0)
@@ -101,7 +110,7 @@ bool isPrime(BIGINT n)
             return false;
         }
     }
-    return rabinMiller(n);
+    return Miller(n, ACCURACY);
 }
 
 BIGINT randrange(BIGINT upper, BIGINT lower)
@@ -113,14 +122,15 @@ BIGINT randrange(BIGINT upper, BIGINT lower)
 BIGINT generateLargePrime(int k)
 {
     BIGINT n;
+    BIGINT lower = pow(2, k - 1) + 1;
+    BIGINT upper = pow(2, k) - 1;
     for (;;)
     {
-        BIGINT lower = pow(2, k - 1) + 1;
-        BIGINT upper = pow(2, k) - 1;
         n = randrange(upper, lower);
-        bool is_it_prime = isPrime(n);
-        if (is_it_prime)
+        bool check = isPrime(n);
+        if (check == true)
         {
+            printf("It is prime!\n");
             break;
         }
         else
@@ -133,6 +143,6 @@ BIGINT generateLargePrime(int k)
 
 int main(void)
 {
-    BIGINT num1 = generateLargePrime(128);
-    printf("%llu\n", num1);
+    BIGINT num1 = generateLargePrime(64);
+    printf("%"_PBIGINT"\n", num1);
 }
