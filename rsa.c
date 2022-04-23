@@ -8,8 +8,9 @@
 #define bool int
 #define true 0
 #define false 1
-#define ACCURACY 10
+#define ACCURACY 5
 #define _PBIGINT PRIu64
+#define ARRAY_SIZE 100
 
 int lowPrimes[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97
                    ,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179
@@ -24,76 +25,42 @@ int lowPrimes[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79
 
 BIGINT randrange(BIGINT upper, BIGINT lower);
 
-BIGINT mulmod(BIGINT a, BIGINT b, BIGINT mod)
+void coef(BIGINT n, BIGINT *c)
 {
-    BIGINT x = 0,y = a % mod;
-    while (b > 0)
+    c[0] = 1;
+    for (BIGINT i = 0; i < n; c[0] = -(c[0]), i++) 
     {
-        if (b % 2 == 1)
-        {    
-            x = (x + y) % mod;
-        }
-        y = (y * 2) % mod;
-        b /= 2;
+        c[1 + i] = 1;
+ 
+        for (BIGINT j = i; j > 0; j--)
+            c[j] = c[j - 1] - c[j];
     }
-    return x % mod;
 }
-/* 
- * modular exponentiation
- */
-BIGINT modulo(BIGINT base, BIGINT exponent, BIGINT mod)
+
+bool aks(BIGINT n)
 {
-    BIGINT x = 1;
-    BIGINT y = base;
-    while (exponent > 0)
+    BIGINT c[ARRAY_SIZE];
+    coef(n, c);
+    c[0]++;
+    c[n]--;
+
+    BIGINT i = n;
+
+    while (i > -1 && c[i] % n == 0)
     {
-        if (exponent % 2 == 1)
-            x = (x * y) % mod;
-        y = (y * y) % mod;
-        exponent = exponent / 2;
+        i--;
     }
-    return x % mod;
-}
- 
-/*
- * Miller-Rabin Primality test, iteration signifies the accuracy
- */
-int Miller(BIGINT p,int iteration)
-{
- 
-    int i;
-    BIGINT s;
-    if (p < 2)
+
+    if (i < 0)
+    {
+        return true;
+    }
+    else
     {
         return false;
     }
-    if (p != 2 && p % 2 == 0)
-    {
-        return false;
-    }
-    s = p - 1;
-    while (s % 2 == 0)
-    {
-        s /= 2;
-    }
 
-    for (i = 0; i < iteration; i++)
-    {
-        BIGINT a = arc4random() % (p - 1) + 1, temp = s;
-        BIGINT mod = modulo(a, temp, p);
-        while (temp != p - 1 && mod != 1 && mod != p - 1)
-        {
-            mod = mulmod(mod, mod, p);
-            temp *= 2;
-        }
-        if (mod != p - 1 && temp % 2 == 0)
-        {
-            return false;
-        }
-    }
-    return true;
 }
-
 
 bool isPrime(BIGINT n)
 {
@@ -102,7 +69,6 @@ bool isPrime(BIGINT n)
         int p = lowPrimes[i];
         if (n == p)
         {
-            printf("Found a low prime");
             return true;
         }
         if (n % p == 0)
@@ -110,7 +76,7 @@ bool isPrime(BIGINT n)
             return false;
         }
     }
-    return Miller(n, ACCURACY);
+    return aks(n);
 }
 
 BIGINT randrange(BIGINT upper, BIGINT lower)
@@ -121,28 +87,29 @@ BIGINT randrange(BIGINT upper, BIGINT lower)
 
 BIGINT generateLargePrime(int k)
 {
-    BIGINT n;
+    BIGINT n = 0;
     BIGINT lower = pow(2, k - 1) + 1;
     BIGINT upper = pow(2, k) - 1;
+    BIGINT counter = 0;
+    BIGINT range = upper - lower;
+    printf("Have %llu numbers to check\n", range);
     for (;;)
     {
         n = randrange(upper, lower);
         bool check = isPrime(n);
-        if (check == true)
+        if (check == true) break;
+        if (counter % 50000000 == 0)
         {
-            printf("It is prime!\n");
-            break;
+            printf("Hit at least %llu numbers iterations without success\n", counter);
         }
-        else
-        {
-            continue;
-        }
+        counter++;
     }
     return n;
 }
 
 int main(void)
 {
-    BIGINT num1 = generateLargePrime(64);
+    srand(time(NULL));
+    BIGINT num1 = generateLargePrime(32);
     printf("%"_PBIGINT"\n", num1);
 }
