@@ -8,7 +8,7 @@
 #define bool int
 #define true 0
 #define false 1
-#define ACCURACY 5
+#define ACCURACY 20
 #define _PBIGINT PRIu64
 #define ARRAY_SIZE 100
 
@@ -24,42 +24,96 @@ int lowPrimes[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79
                    ,887,907,911,919,929,937,941,947,953,967,971,977,983,991,997};
 
 BIGINT randrange(BIGINT upper, BIGINT lower);
+bool MillerRabin(BIGINT n);
 
-void coef(BIGINT n, BIGINT *c)
+BIGINT _power(BIGINT a,BIGINT b,BIGINT mod)
 {
-    c[0] = 1;
-    for (BIGINT i = 0; i < n; c[0] = -(c[0]), i++) 
+    if (a == 0 || b < mod / a)
+        return (a*b)%mod;
+    BIGINT sum;
+    sum = 0;
+    while(b>0)
     {
-        c[1 + i] = 1;
- 
-        for (BIGINT j = i; j > 0; j--)
-            c[j] = c[j - 1] - c[j];
+        if(b&1)
+            sum = (sum + a) % mod;
+        a = (2*a) % mod;
+        b>>=1;
     }
+
+    return sum;
 }
 
-bool aks(BIGINT n)
+BIGINT power(BIGINT x, BIGINT y, BIGINT p)
 {
-    BIGINT c[ARRAY_SIZE];
-    coef(n, c);
-    c[0]++;
-    c[n]--;
-
-    BIGINT i = n;
-
-    while (i > -1 && c[i] % n == 0)
+    BIGINT res = 1;     // Initialize result
+ 
+    x = x % p; // Update x if it is more than or
+                // equal to p
+  
+    if (x == 0) return 0; // In case x is divisible by p;
+ 
+    while (y > 0)
     {
-        i--;
+        // If y is odd, multiply x with result
+        if (y % 2 == 1)
+            res = _power(res, x, p);
+ 
+        // y must be even now
+        y = y>>1; // y = y/2
+        x = _power(x, x, p);
     }
+    return res;
+}
 
-    if (i < 0)
+bool Fermat(BIGINT n)
+{
+    BIGINT result = power(2, n - 1, n);
+    if (result == 1)
     {
-        return true;
+        return MillerRabin(n);
     }
     else
     {
         return false;
     }
+}
 
+bool MillerRabin(BIGINT n)
+{
+    BIGINT s = 0;
+    BIGINT q;
+    BIGINT counter = n - 1;
+
+    while (counter % 2 == 0)
+    {
+        s++;
+        counter /= 2;
+    }
+
+    q = (n-1)/pow(2, s);
+
+    for (int i = 0; i < ACCURACY; i++)
+    {
+        BIGINT a = randrange(1, n - 1);
+        
+        if (power(a, q, n) == 1)
+        {
+            return true;
+        }
+        else
+        {
+            for (int j = 0; j < s; j++)
+            {
+                if (power(a, (pow(2, i)* q), n) == n-1)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool isPrime(BIGINT n)
@@ -76,12 +130,12 @@ bool isPrime(BIGINT n)
             return false;
         }
     }
-    return aks(n);
+    return Fermat(n);
 }
 
 BIGINT randrange(BIGINT upper, BIGINT lower)
 {
-    BIGINT num = (arc4random() % (upper - lower + 1)) + lower;
+    BIGINT num = (rand() % (upper - lower + 1)) + lower;
     return num;
 }
 
@@ -90,26 +144,34 @@ BIGINT generateLargePrime(int k)
     BIGINT n = 0;
     BIGINT lower = pow(2, k - 1) + 1;
     BIGINT upper = pow(2, k) - 1;
-    BIGINT counter = 0;
     BIGINT range = upper - lower;
-    printf("Have %llu numbers to check\n", range);
     for (;;)
     {
         n = randrange(upper, lower);
         bool check = isPrime(n);
         if (check == true) break;
-        if (counter % 50000000 == 0)
-        {
-            printf("Hit at least %llu numbers iterations without success\n", counter);
-        }
-        counter++;
     }
     return n;
 }
 
-int main(void)
+int main(int argc, char* argv[])
 {
     srand(time(NULL));
-    BIGINT num1 = generateLargePrime(32);
-    printf("%"_PBIGINT"\n", num1);
+    if (argc == 1)
+    {
+        printf("Invalid Arguments");
+        return 1;
+    }
+    for (int i = 1; i < argc; i++)
+    {
+        char* number_str = argv[i];
+        int number_int = atoi(number_str);
+        if (number_int == 1)
+        {
+            printf("Number cannot be 1\n");
+            return 2;
+        }
+        BIGINT num1 = generateLargePrime(number_int);
+        printf("%"_PBIGINT"\n", num1);
+    }
 }
