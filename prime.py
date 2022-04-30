@@ -54,12 +54,17 @@ def isMillerRabinPassed(mrc):
 			return False
 	return True
 
-if __name__ == '__main__':
+def getPrime(n=1024):
+	prime_candidate = 0x0
 	while True:
-		n = 1024
 		prime_candidate = getLowLevelPrime(n)
 		if not isMillerRabinPassed(prime_candidate):
 			continue
 		else:
-			print(n, "bit prime is: \n", prime_candidate)
 			break
+	return prime_candidate
+
+if __name__ == "__main__":
+	a = getPrime()
+	b = getPrime()
+	print(f"A*b = {a*b}")

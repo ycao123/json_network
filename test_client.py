@@ -1,16 +1,12 @@
-from lib2to3.pytree import Base
-from base_socket import ClientSocket as CSocket
-    
+from client_socket import ClientSocket as CSocket
+import unittest
+
 test_socket = CSocket()
+    
+class TestClient(unittest.TestCase):
+    def test_bool(self):
+        self.assertEqual(True, False)
 
-try:
-    test_socket.connect("0.0.0.0")
-    test_socket.send("Goodbye!")
-    print(test_socket.recv())
 
-    test_socket.close()
-
-except BaseException as error:
-    print(error)
-    test_socket.close()
-    exit()
+if __name__ == "__main__":
+    unittest.main()

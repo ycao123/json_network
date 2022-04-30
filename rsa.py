@@ -3,13 +3,8 @@ import subprocess
 import sys
 from time import sleep
 import warnings
+import prime
 
-
-def generateLargePrime():
-    number = randint(57, 60)
-    sleep(0.1)
-    prime = subprocess.getoutput(f"./rsa {number}")
-    return int(prime)
 
 def gcd(a, b):
     if a == 0:
@@ -20,8 +15,8 @@ def gcd(a, b):
 class RSAKey:
     def __init__(self, create_key=False):
         if create_key:
-            p = generateLargePrime()
-            q = generateLargePrime()
+            p = prime.getPrime()
+            q = prime.getPrime()
             self.n = p*q
             λ = (p-1)*(q-1)
             self.e = 65537
@@ -29,6 +24,10 @@ class RSAKey:
         self.target = RSADummy
 
     def encode(self, text: str):
+        if not self.target.e and not self.target.n:
+            print()
+            sys.exit(2)
+
         m = self._encode(text)
         if m >= self.target.n:
             print("INVALID LENGTH")
@@ -87,17 +86,24 @@ class RSADummy(RSAKey):
         self.n = None
         self.e = None
 
-alice = RSAKey(create_key=True)
-bob = RSAKey()
+def main():
+    alice = RSAKey(create_key=True)
+    bob = RSAKey()
 
 
-bob.target.n = alice.n
-bob.target.e = alice.e
+    bob.target.n = alice.n
+    bob.target.e = alice.e
 
-text = bob.encode("Some random text that")
+    text1 = bob.encode("convallis tellus id interdum velit laoreet id donec ultrices tincidunt arcu non sodales neque sodales ut etiam sit amet nisl purus in mollis nunc sed id semper risus in hendrerit gravida rutrum quisque non tellus orci ac auctor augue mauris")
+    text2 = bob.encode("Hello!")
 
-print(f"Encoded text: {text}")
 
-uncoded = alice.decode(text)
-print(uncoded)
+    print(f"Encoded texts: {text1}, {text2}")
+
+    uncoded1 = alice.decode(text1)
+    uncoded2 = alice.decode(text2)
+    print(uncoded1, uncoded2)
+
+if __name__ == "__main__":
+    main()
 
